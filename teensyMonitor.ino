@@ -3,10 +3,10 @@
 #include <EEPROM.h>
 #define TILTPIN 6
 #define MAXDIST  200
-#define PERIOD 1000
+#define PERIOD 100
 //Note: changing MAXP may cause data loss
 #define MAXP 100
-#define BUFFSIZE 30000000
+#define BUFFSIZE 3000000000
 bool tilts[MAXP];
 int buff;
 int tail=0;
@@ -18,7 +18,7 @@ SoftwareSerial btooth(9,10);
 
 void setup()
 {
-  btooth.begin(9600);
+   btooth.begin(9600);
     Serial.begin(9600);
     pinMode (TILTPIN, INPUT) ;//define the output interface tilt switch sensor
     loadFromMemory();
@@ -125,7 +125,9 @@ int updateValues(){
     if(count>MAXP)btooth.write((byte)2);
     else if(count>dist)btooth.write((byte)1);
     else{
-      btooth.write((byte)0);
+      int s=tail-count;
+      if(s<0)s+=MAXP;
+      sendD(0,s,tail);
       Serial.print("Writing Error:");
       Serial.println((byte)0);
     //fix command
@@ -166,9 +168,9 @@ return 0;
 }
 
 void loadFromMemory(){
-    head=(EEPROM.read(MAXP<<1))*2*2*2*2*2*2*2*2+EEPROM.read(MAXP<<1|1);
-    tail=(EEPROM.read((MAXP<<1)+2))*2*2*2*2*2*2*2*2+EEPROM.read((MAXP<<1)+3);
-    last=(EEPROM.read((MAXP<<1)+4))*2*2*2*2*2*2*2*2+EEPROM.read((MAXP<<1)+5);
+    head=(EEPROM.read(MAXP))*2*2*2*2*2*2*2*2+EEPROM.read(MAXP+1);
+    tail=(EEPROM.read((MAXP+2))*2*2*2*2*2*2*2*2+EEPROM.read(MAXP+3));
+    last=(EEPROM.read((MAXP+4))*2*2*2*2*2*2*2*2+EEPROM.read(MAXP+5));
     int h=head;
     int t=tail;
     tail%=MAXP;
